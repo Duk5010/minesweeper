@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro Minesweeper</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/retro.css">
+</head>
+<body>
+    <div id="game-container">
+        
+        <div id="difficulty-buttons" class="controls-area">
+            <button id="beginner-btn" data-difficulty="BEGINNER" class="diff-btn">Beginner</button>
+            <button id="intermediate-btn" data-difficulty="INTERMEDIATE" class="diff-btn">Intermediate</button>
+            <button id="expert-btn" data-difficulty="EXPERT" class="diff-btn">Expert</button>
+        </div>
+
+        <div class="game-header">
+            <div id="mine-count" class="counter">000</div>
+            
+            <button id="reset-btn" class="smiley-btn">
+                <img src="assets/images/ui/smiley-normal.png" alt="Reset">
+            </button>
+            
+            <div id="timer" class="counter">000</div>
+        </div>
+
+        <div id="grid-container"></div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
