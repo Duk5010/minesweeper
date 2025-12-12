@@ -10,9 +10,43 @@ let timerInterval;
 let timeElapsed = 0;
 let currentDifficultyKey = 'BEGINNER'; 
 
+const sounds = {
+    click: null,
+    lose: null,
+    flag: null
+};
+
 function init() {
     const diffContainer = document.getElementById('difficulty-buttons');
     const resetBtn = document.getElementById('reset-btn');
+
+    const changelogBtn = document.getElementById('changelog-btn');
+    const modal = document.getElementById('changelog-modal');
+    const closeBtn = document.getElementById('close-modal-btn');
+    
+    if (changelogBtn && modal) {
+        changelogBtn.addEventListener('click', () => {
+            modal.style.display = 'flex';
+        });
+        
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+        }
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+
+    if (CONFIG.ASSETS.SOUNDS) {
+        if (CONFIG.ASSETS.SOUNDS.CLICK) sounds.click = new Audio(CONFIG.ASSETS.SOUNDS.CLICK);
+        if (CONFIG.ASSETS.SOUNDS.LOSE) sounds.lose = new Audio(CONFIG.ASSETS.SOUNDS.LOSE);
+        if (CONFIG.ASSETS.SOUNDS.FLAG) sounds.flag = new Audio(CONFIG.ASSETS.SOUNDS.FLAG);
+    }
 
     ui = new UI(
         document.getElementById('grid-container'),
@@ -23,15 +57,27 @@ function init() {
         }
     );
 
-    diffContainer.addEventListener('click', (e) => {
-        if (e.target.classList.contains('diff-btn')) {
-            startGame(e.target.dataset.difficulty);
-        }
-    });
+    if (diffContainer) {
+        diffContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('diff-btn')) {
+                startGame(e.target.dataset.difficulty);
+            }
+        });
+    }
     
-    resetBtn.addEventListener('click', () => startGame(currentDifficultyKey));
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => startGame(currentDifficultyKey));
+    }
 
     startGame('BEGINNER');
+}
+
+function playSound(soundName) {
+    const sound = sounds[soundName];
+    if (sound) {
+        sound.currentTime = 0; 
+        sound.play().catch(e => {});
+    }
 }
 
 function startGame(difficultyKey) {
@@ -52,12 +98,27 @@ function startGame(difficultyKey) {
     ui.setSmiley('normal');
 
     currentControls = new Controls(game, ui, (action, r, c) => {
+        const cell = game.board[r][c];
+
         if (action === 'reveal') {
             if (timeElapsed === 0 && !timerInterval) startTimer();
+            
             const result = game.reveal(r, c);
-            handleGameResult(result);
+            
+            if (result) {
+                if (result.type === 'LOSE') {
+                    handleGameResult(result);
+                } else {
+                    playSound('click');
+                    handleGameResult(result);
+                }
+            }
+
         } else if (action === 'flag') {
-            game.toggleFlag(r, c);
+            if (!cell.revealed) {
+                playSound('flag'); 
+                game.toggleFlag(r, c);
+            }
         }
         
         ui.updateBoard(game.board, game.gameOver);
@@ -71,6 +132,7 @@ function handleGameResult(result) {
     if (result.type === 'LOSE') {
         stopTimer();
         ui.setSmiley('lose');
+        playSound('lose');
     } else if (result.type === 'WIN') {
         stopTimer();
         ui.setSmiley('win');

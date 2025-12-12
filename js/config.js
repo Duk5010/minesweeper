@@ -21,6 +21,11 @@ export const CONFIG = {
             WIN: 'assets/images/ui/smiley-win.png',
             LOSE: 'assets/images/ui/smiley-lose.png'
         },
-        NUMBERS_PATH: 'assets/images/numbers/' // expect 1.png, 2.png...
+        SOUNDS: {
+            CLICK: 'assets/sounds/click.wav',
+            LOSE: 'assets/sounds/lose.mp3', //this is so goofy T.T
+            FLAG: 'assets/sounds/flag.wav'
+        },
+        NUMBERS_PATH: 'assets/images/numbers/' 
     }
 };

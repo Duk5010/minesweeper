@@ -3,16 +3,18 @@ export class MinesweeperGame {
         this.rows = rows;
         this.cols = cols;
         this.totalMines = mines;
+        
         this.board = [];
         this.gameOver = false;
-        this.won = false;
+        this.minesPlaced = false;
         this.flagsPlaced = 0;
-        this.firstClick = true; 
+        this.cellsRevealed = 0;
         
         this.initBoard();
     }
 
     initBoard() {
+        this.board = [];
         for (let r = 0; r < this.rows; r++) {
             this.board[r] = [];
             for (let c = 0; c < this.cols; c++) {
@@ -26,44 +28,39 @@ export class MinesweeperGame {
         }
     }
 
-    placeMines(safeR, safeC) {
-        let minesPlaced = 0;
-        
-        const safeZone = new Set();
-        for (let dr = -1; dr <= 1; dr++) {
-            for (let dc = -1; dc <= 1; dc++) {
-                const r = safeR + dr;
-                const c = safeC + dc;
-                if (r >= 0 && r < this.rows && c >= 0 && c < this.cols) {
-                    safeZone.add(`${r},${c}`);
-                }
-            }
-        }
-        
-        while (minesPlaced < this.totalMines) {
+    placeMines(initialR, initialC) {
+        let minesToPlace = this.totalMines;
+        while (minesToPlace > 0) {
             const r = Math.floor(Math.random() * this.rows);
             const c = Math.floor(Math.random() * this.cols);
 
-            if (!this.board[r][c].isMine && !safeZone.has(`${r},${c}`)) {
+            if (!this.board[r][c].isMine && 
+                (Math.abs(r - initialR) > 1 || Math.abs(c - initialC) > 1)) {
+                
                 this.board[r][c].isMine = true;
-                minesPlaced++;
+                minesToPlace--;
             }
         }
-        this.calculateNeighbors();
+        this.calculateNumbers();
+        this.minesPlaced = true;
     }
 
-    calculateNeighbors() {
-        const directions = [[-1,-1], [-1,0], [-1,1], [0,-1], [0,1], [1,-1], [1,0], [1,1]];
-        
+    calculateNumbers() {
+        const dirs = [
+            [-1, -1], [-1, 0], [-1, 1],
+            [0, -1],           [0, 1],
+            [1, -1],  [1, 0],  [1, 1]
+        ];
+
         for (let r = 0; r < this.rows; r++) {
             for (let c = 0; c < this.cols; c++) {
                 if (this.board[r][c].isMine) continue;
-                
+
                 let count = 0;
-                directions.forEach(([dr, dc]) => {
+                dirs.forEach(([dr, dc]) => {
                     const nr = r + dr, nc = c + dc;
-                    if (nr >= 0 && nr < this.rows && nc >= 0 && nc < this.cols) {
-                        if (this.board[nr][nc].isMine) count++;
+                    if (this.isValid(nr, nc) && this.board[nr][nc].isMine) {
+                        count++;
                     }
                 });
                 this.board[r][c].neighborMines = count;
@@ -72,11 +69,10 @@ export class MinesweeperGame {
     }
 
     reveal(r, c) {
-        if (this.gameOver || this.board[r][c].flagged || this.board[r][c].revealed) return;
+        if (this.gameOver || this.board[r][c].flagged || this.board[r][c].revealed) return null;
 
-        if (this.firstClick) {
-            this.placeMines(r, c); 
-            this.firstClick = false;
+        if (!this.minesPlaced) {
+            this.placeMines(r, c);
         }
 
         const cell = this.board[r][c];
@@ -84,35 +80,39 @@ export class MinesweeperGame {
 
         if (cell.isMine) {
             this.gameOver = true;
-            this.won = false;
-            return { type: 'LOSE', cell: {r, c} };
+            return { type: 'LOSE' };
         }
+
+        this.cellsRevealed++;
 
         if (cell.neighborMines === 0) {
-            this.expandZeroes(r, c);
+            this.floodFill(r, c);
         }
 
-        if (this.checkWin()) {
+        if (this.cellsRevealed === (this.rows * this.cols) - this.totalMines) {
             this.gameOver = true;
-            this.won = true;
+            this.flagAllMines();
             return { type: 'WIN' };
         }
 
         return { type: 'CONTINUE' };
     }
 
-    expandZeroes(r, c) {
-        const directions = [[-1,-1], [-1,0], [-1,1], [0,-1], [0,1], [1,-1], [1,0], [1,1]];
-        directions.forEach(([dr, dc]) => {
+    floodFill(r, c) {
+        const dirs = [
+            [-1, -1], [-1, 0], [-1, 1],
+            [0, -1],           [0, 1],
+            [1, -1],  [1, 0],  [1, 1]
+        ];
+
+        dirs.forEach(([dr, dc]) => {
             const nr = r + dr, nc = c + dc;
-            // Check boundaries
-            if (nr >= 0 && nr < this.rows && nc >= 0 && nc < this.cols) {
+            if (this.isValid(nr, nc) && !this.board[nr][nc].revealed && !this.board[nr][nc].flagged) {
                 const neighbor = this.board[nr][nc];
-                if (!neighbor.revealed && !neighbor.flagged) {
-                    neighbor.revealed = true;
-                    if (neighbor.neighborMines === 0) {
-                        this.expandZeroes(nr, nc);
-                    }
+                neighbor.revealed = true;
+                this.cellsRevealed++;
+                if (neighbor.neighborMines === 0) {
+                    this.floodFill(nr, nc);
                 }
             }
         });
@@ -123,15 +123,22 @@ export class MinesweeperGame {
         
         const cell = this.board[r][c];
         cell.flagged = !cell.flagged;
-        this.flagsPlaced += cell.flagged ? 1 : -1;
+        
+        if (cell.flagged) this.flagsPlaced++;
+        else this.flagsPlaced--;
     }
 
-    checkWin() {
+    flagAllMines() {
         for (let r = 0; r < this.rows; r++) {
             for (let c = 0; c < this.cols; c++) {
-                if (!this.board[r][c].isMine && !this.board[r][c].revealed) return false;
+                if (this.board[r][c].isMine) {
+                    this.board[r][c].flagged = true;
+                }
             }
         }
-        return true;
+    }
+
+    isValid(r, c) {
+        return r >= 0 && r < this.rows && c >= 0 && c < this.cols;
     }
 }
