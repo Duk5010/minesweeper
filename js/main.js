@@ -16,10 +16,30 @@ const sounds = {
     flag: null
 };
 
+// Store preloaded assets to prevent garbage collection
+const assetCache = [];
+
+// --- IMMEDIATE STATE CHECK ---
+// We check this immediately at the module level to prevent UI flashing.
+// Since modules are deferred, the DOM elements should be accessible.
+const loadingScreen = document.getElementById('loading-screen');
+const gameContainer = document.getElementById('game-container');
+const lastActive = localStorage.getItem('ms_last_active');
+const now = Date.now();
+const INACTIVITY_THRESHOLD = 30 * 60 * 1000; // 30 minutes in milliseconds
+const needsLoading = !lastActive || (now - parseInt(lastActive) > INACTIVITY_THRESHOLD);
+
+if (needsLoading && loadingScreen && gameContainer) {
+    // Force loading screen visible and hide game immediately
+    loadingScreen.style.display = 'flex';
+    gameContainer.style.display = 'none';
+}
+// -----------------------------
+
 async function preloadAssets(onProgress) {
     const assets = [];
     
-    // 1. Gather all image assets
+    // 1. Gather all image assets from CONFIG
     if (CONFIG.ASSETS.TILES) {
         Object.values(CONFIG.ASSETS.TILES).forEach(src => assets.push({src, type: 'img'}));
     }
@@ -39,6 +59,9 @@ async function preloadAssets(onProgress) {
         Object.values(CONFIG.ASSETS.SOUNDS).forEach(src => assets.push({src, type: 'audio'}));
     }
 
+    // 4. Preload Font (Crucial for the counter display)
+    assets.push({ src: 'assets/fonts/Seven Segment.ttf', type: 'font', family: 'Seven Segment' });
+
     let loadedCount = 0;
     const totalAssets = assets.length;
 
@@ -50,8 +73,30 @@ async function preloadAssets(onProgress) {
     // Helper to load a single asset
     const loadAsset = (asset) => {
         return new Promise((resolve) => {
+            // Handle Font Loading
+            if (asset.type === 'font') {
+                const font = new FontFace(asset.family, `url(${asset.src})`);
+                font.load().then((loadedFont) => {
+                    document.fonts.add(loadedFont);
+                    loadedCount++;
+                    const percent = Math.floor((loadedCount / totalAssets) * 100);
+                    onProgress(percent);
+                    resolve();
+                }).catch((e) => {
+                    console.warn(`Failed to load font: ${asset.src}`, e);
+                    loadedCount++;
+                    onProgress(Math.floor((loadedCount / totalAssets) * 100));
+                    resolve();
+                });
+                return;
+            }
+
+            // Handle Images and Audio
             const element = asset.type === 'img' ? new Image() : new Audio();
             
+            // Push to cache to prevent garbage collection ensuring immediate availability
+            assetCache.push(element);
+
             const handleLoad = () => {
                 loadedCount++;
                 const percent = Math.floor((loadedCount / totalAssets) * 100);
@@ -62,19 +107,18 @@ async function preloadAssets(onProgress) {
             // Setup listeners
             if (asset.type === 'img') {
                 element.onload = handleLoad;
-                element.onerror = handleLoad; // Proceed even if error
+                element.onerror = handleLoad; 
             } else {
                 element.oncanplaythrough = handleLoad;
                 element.onerror = handleLoad;
             }
 
-            // Timeout fallback
+            // Timeout fallback to prevent hanging forever
             setTimeout(() => {
                 if (loadedCount < totalAssets) {
-                    // Force resolve if stuck to prevent hanging
                     resolve(); 
                 }
-            }, 2000);
+            }, 3000); // 3 seconds timeout per asset
 
             element.src = asset.src;
         });
@@ -85,34 +129,28 @@ async function preloadAssets(onProgress) {
 }
 
 async function init() {
-    // 1. Check Inactivity / First Visit
-    const lastActive = localStorage.getItem('ms_last_active');
-    const now = Date.now();
-    const INACTIVITY_THRESHOLD = 30 * 60 * 1000; // 30 minutes in milliseconds
-    
-    const isFirstVisitOrInactive = !lastActive || (now - parseInt(lastActive) > INACTIVITY_THRESHOLD);
-    
-    // Update activity timestamp
-    localStorage.setItem('ms_last_active', now);
+    // Update activity timestamp for this session
+    localStorage.setItem('ms_last_active', Date.now());
 
-    const loadingScreen = document.getElementById('loading-screen');
     const loadingText = document.getElementById('loading-text');
     const loadingBar = document.getElementById('loading-bar');
 
-    // 2. Show loading screen if conditions met
-    if (isFirstVisitOrInactive && loadingScreen) {
-        loadingScreen.style.display = 'flex';
+    // Perform loading sequence if needed
+    if (needsLoading && loadingScreen) {
         
-        // Start Preloading
         await preloadAssets((percent) => {
             if (loadingText) loadingText.textContent = `${percent}%`;
             if (loadingBar) loadingBar.style.width = `${percent}%`;
         });
 
-        // Small artificial delay for UX (so 100% is visible briefly)
+        // Ensure we show 100% briefly
+        if (loadingText) loadingText.textContent = `100%`;
+        if (loadingBar) loadingBar.style.width = `100%`;
         await new Promise(r => setTimeout(r, 500));
         
+        // Hide loading screen and Show Game
         loadingScreen.style.display = 'none';
+        if (gameContainer) gameContainer.style.display = ''; // Revert to CSS display value
     }
 
     const diffContainer = document.getElementById('difficulty-buttons');
