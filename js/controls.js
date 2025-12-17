@@ -97,11 +97,12 @@ export class Controls {
 
         // Left Click (0)
         if (e.button === 0) {
+            // Check if cell is revealed for chording
             if (this.game.board[r][c].revealed) {
                 // CHORDING: Allow left-click on revealed number to chord
                 const chordingHappened = this.game.chord(r, c);
                 if (chordingHappened) this.playSound('click');
-            } else {
+            } else if (!this.game.board[r][c].flagged) { // Only reveal if NOT flagged
                 this.game.reveal(r, c);
                 this.playSound('click');
             }
@@ -113,8 +114,11 @@ export class Controls {
         }
         // Right Click (2) - FLAG
         else if (e.button === 2) {
-            this.game.toggleFlag(r, c);
-            this.playSound('flag');
+            // Only toggle flag if cell is NOT revealed
+            if (!this.game.board[r][c].revealed) {
+                this.game.toggleFlag(r, c);
+                this.playSound('flag');
+            }
         }
 
         this.ui.render(this.game);
@@ -133,12 +137,15 @@ export class Controls {
 
         // Long press detection
         this.longPressTimer = setTimeout(() => {
-            this.game.toggleFlag(cellData.r, cellData.c);
-            this.playSound('flag');
-            this.ui.render(this.game);
-            
-            // Haptic feedback
-            if (navigator.vibrate) navigator.vibrate(50);
+            // Only flag if not revealed
+            if (!this.game.board[cellData.r][cellData.c].revealed) {
+                this.game.toggleFlag(cellData.r, cellData.c);
+                this.playSound('flag');
+                this.ui.render(this.game);
+                
+                // Haptic feedback
+                if (navigator.vibrate) navigator.vibrate(50);
+            }
             
             this.lastTouchElement = null; // Mark as handled
             this.ui.setFace('normal');
@@ -161,7 +168,7 @@ export class Controls {
              if (this.game.board[cellData.r][cellData.c].revealed) {
                  const chordingHappened = this.game.chord(cellData.r, cellData.c);
                  if (chordingHappened) this.playSound('click');
-             } else {
+             } else if (!this.game.board[cellData.r][cellData.c].flagged) {
                  this.game.reveal(cellData.r, cellData.c);
                  this.playSound('click');
              }
