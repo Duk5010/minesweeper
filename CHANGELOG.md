@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.6.0] - 2024-05-23
+## [1.6.0] - 2025-05-23
 
 ### Changed
 - **UI Revamp:** Removed the redundant title bar and window controls from the main application window for a cleaner, focused look.
@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.5.0] - 2024-05-22
+## [1.5.0] - 2025-05-22
 
 ### Added
 - **Advanced Statistics Tracking:** Implemented a system to track user interaction efficiency.
@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.4.0] - 2024-05-21
+## [1.4.0] - 2025-05-21
 
 ### Added
 - **Classic Dialog Modals:** Redesigned the "Game Over" and "Win" popups to mimic polished retro system dialog boxes.
@@ -35,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.3.0] - 2024-05-20
+## [1.3.0] - 2025-05-20
 
 ### Added
 - **Visual Feedback:** Tiles now show a "pressed" state (switching to `tile-revealed.png`) during active clicks and chording.
@@ -46,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.2.0] - 2024-05-19
+## [1.2.0] - 2025-05-19
 
 ### Added
 - **Chording Mechanic:** Implemented the ability to reveal surrounding tiles by clicking a revealed number if the flag count matches.
@@ -54,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.1.0] - 2024-05-18
+## [1.1.0] - 2025-05-18
 
 ### Added
 - **Asset Preloading:** Integrated a preloading system to ensure images and fonts are ready before the game starts, preventing flickering.
@@ -65,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.0.0] - 2024-05-15
+## [1.0.0] - 2025-05-15
 
 ### Added
 - **Core Mechanics:** Basic Minesweeper logic including grid generation, mine placement, and recursive reveal.
