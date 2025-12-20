@@ -39,7 +39,13 @@ function initGame(difficultySettings) {
     if (controls) {
         controls.cleanup();
     }
-    if (timerInterval) clearInterval(timerInterval);
+    
+    // --- FIX APPLIED HERE ---
+    // Clears the interval and resets the variable to null so startTimer works on next click
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
     
     // Hide popups if open
     document.getElementById('game-over-modal').style.display = 'none';
