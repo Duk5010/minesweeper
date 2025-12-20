@@ -41,8 +41,9 @@ function initGame(difficultySettings) {
     }
     if (timerInterval) clearInterval(timerInterval);
     
-    // Hide popup if open
+    // Hide popups if open
     document.getElementById('game-over-modal').style.display = 'none';
+    document.getElementById('version-modal').style.display = 'none';
 
     const { rows, cols, mines } = difficultySettings || CONFIG.DIFFICULTY[currentDifficulty];
     
@@ -103,7 +104,6 @@ function showGameOverPopup(win) {
         title.innerText = "Game Won";
         const timeTaken = Math.floor((Date.now() - startTime) / 1000);
         text.innerHTML = `Congratulations!<br>You finished in ${timeTaken} seconds.`;
-        // Use CSS class for styling instead of inline styles
         icon.innerHTML = `<span class="icon-win">i</span>`; 
     } else {
         title.innerText = "Game Lost";
@@ -143,7 +143,6 @@ function showGameOverPopup(win) {
     `;
     
     text.innerHTML += tableHTML;
-    
     modal.style.display = 'flex';
 }
 
@@ -162,6 +161,18 @@ document.addEventListener('play-sound', (e) => {
 document.getElementById('msg-restart-btn').addEventListener('click', () => {
     initGame();
 });
+
+// Version Log Logic
+document.getElementById('version-tag').addEventListener('click', () => {
+    document.getElementById('version-modal').style.display = 'flex';
+});
+
+const closeVersionLog = () => {
+    document.getElementById('version-modal').style.display = 'none';
+};
+
+document.getElementById('close-log-btn').addEventListener('click', closeVersionLog);
+document.getElementById('close-log-x').addEventListener('click', closeVersionLog);
 
 // Difficulty Selector
 document.getElementById('diff-select').addEventListener('change', (e) => {

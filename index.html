@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Minesweeper</title>
     <link rel="stylesheet" href="css/styles.css">
+    <!-- Prevent favicon errors -->
+    <link rel="icon" href="data:,">
 </head>
 <body>
 
@@ -12,29 +14,22 @@
 
     <div id="game-app" style="display: none;">
         <div class="window">
-            <div class="title-bar">
-                <div class="title-text">Minesweeper</div>
-                <div class="window-controls">
-                    <button>_</button>
-                    <button>X</button>
-                </div>
-            </div>
-            
             <div class="menu-bar">
                 <div class="menu-item">Game</div>
+                <div class="menu-item">
+                    <select id="diff-select">
+                        <option value="BEGINNER">Beginner</option>
+                        <option value="INTERMEDIATE" selected>Intermediate</option>
+                        <option value="EXPERT">Expert</option>
+                        <option value="CUSTOM">Custom...</option>
+                    </select>
+                </div>
                 <div class="menu-item">Help</div>
-                <!-- Difficulty Selector moved inside Game menu ideally, but keeping here for ease -->
-                <select id="diff-select" style="margin-left: 10px;">
-                    <option value="BEGINNER">Beginner</option>
-                    <option value="INTERMEDIATE" selected>Intermediate</option>
-                    <option value="EXPERT">Expert</option>
-                    <option value="CUSTOM">Custom...</option>
-                </select>
             </div>
 
             <div class="game-container">
                 <div class="header">
-                    <div class="counter-box" id="mines-val">040</div>
+                    <div class="counter-box" id="mines-val">000</div>
                     <div class="face-btn" id="reset-btn">
                         <img src="assets/images/ui/smiley-normal.png" alt="Reset">
                     </div>
@@ -50,9 +45,12 @@
         </div>
     </div>
 
-    <!-- Custom Game Modal -->
+    <!-- Version Tag -->
+    <div id="version-tag" class="version-tag">v1.4.0</div>
+
+    <!-- Custom Difficulty Modal -->
     <div id="custom-modal" class="modal">
-        <div class="modal-content">
+        <div class="window modal-content">
             <div class="window-header">Custom Field</div>
             <form id="custom-form">
                 <div class="form-group">
@@ -67,7 +65,7 @@
                     <label>Mines:</label>
                     <input type="number" id="custom-mines" min="10" max="600" value="50">
                 </div>
-                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                <div class="msg-footer">
                     <button type="submit">OK</button>
                     <button type="button" onclick="document.getElementById('custom-modal').style.display='none'">Cancel</button>
                 </div>
@@ -75,22 +73,118 @@
         </div>
     </div>
 
-    <!-- Game Over Pop-up -->
-    <div id="game-over-modal" class="modal">
-        <div class="modal-content msg-box">
-            <div class="window-header" id="msg-title">Game Over</div>
-            <div class="msg-body">
-                <div id="msg-icon">
-                    <!-- Icon placeholder, usually an exclamation or X -->
-                    <span>!</span>
-                </div>
-                <div id="msg-text">
-                    Sorry, you lost.
+    <!-- Version Log Modal -->
+    <div id="version-modal" class="modal">
+        <div class="modal-content version-log-container">
+            <div class="window-header">
+                <span class="modal-title">Version History</span>
+                <button class="close-btn" id="close-log-x">x</button>
+            </div>
+            
+            <div class="version-modal-body">
+                <div class="content-well">
+                    <!-- v1.4.0 -->
+                    <div class="version-entry">
+                        <div class="version-header">
+                            <span class="version-number">v1.4.0</span>
+                            <span class="version-date">Dec 20, 2025</span>
+                        </div>
+                        <div class="category">Added</div>
+                        <ul class="feature-list">
+                            <li><strong>Advanced Statistics Tracking:</strong> Implemented a system to track user interaction efficiency.</li>
+                            <li><strong>Active Clicks:</strong> Actions that successfully changed the game state.</li>
+                            <li><strong>Wasted Clicks:</strong> Redundant actions (clicking flags, already revealed cells, etc.).</li>
+                            <li><strong>Categorized Metrics:</strong> Stats are now broken down by Left Clicks, Right Clicks, and Chord Actions.</li>
+                            <li><strong>Results Table:</strong> Integrated a detailed statistics table into the Win/Loss modal.</li>
+                        </ul>
+                    </div>
+
+                    <!-- v1.3.0 -->
+                    <div class="version-entry">
+                        <div class="version-header">
+                            <span class="version-number">v1.3.0</span>
+                            <span class="version-date">Dec 19, 2025</span>
+                        </div>
+                        <div class="category">Added</div>
+                        <ul class="feature-list">
+                            <li><strong>Visual Feedback:</strong> Tiles now show a "pressed" state (switching to <code>tile-revealed.png</code>) during active clicks and chording.</li>
+                            <li><strong>Classic Dialog Modals:</strong> Redesigned the "Game Over" and "Win" popups to mimic polished retro system dialog boxes.</li>
+                            <li><strong>Improved Typography:</strong> Refined font usage and spacing in system messages.</li>
+                        </ul>
+                        <div class="category">Fixed</div>
+                        <ul class="feature-list">
+                            <li><strong>Flag Protection:</strong> Ensured that flagged tiles remain visually constant and are not affected by chord highlighting.</li>
+                        </ul>
+                    </div>
+
+                    <!-- v1.2.0 -->
+                    <div class="version-entry">
+                        <div class="version-header">
+                            <span class="version-number">v1.2.0</span>
+                            <span class="version-date">Oct 15, 2025</span>
+                        </div>
+                        <div class="category">Added</div>
+                        <ul class="feature-list">
+                            <li><strong>Chording Mechanic:</strong> Implemented the ability to reveal surrounding tiles by clicking a revealed number if the flag count matches.</li>
+                            <li><strong>Performance:</strong> Optimized the flood-fill algorithm for revealing empty areas.</li>
+                        </ul>
+                    </div>
+
+                    <!-- v1.1.0 -->
+                    <div class="version-entry">
+                        <div class="version-header">
+                            <span class="version-number">v1.1.0</span>
+                            <span class="version-date">Dec 12, 2025</span>
+                        </div>
+                        <div class="category">Added</div>
+                        <ul class="feature-list">
+                            <li><strong>Asset Preloading:</strong> Integrated a preloading system to ensure images and fonts are ready before the game starts, preventing flickering.</li>
+                            <li><strong>Typography:</strong> Integrated the 'Seven Segment' font for a more authentic LED counter look.</li>
+                        </ul>
+                        <div class="category">Changed</div>
+                        <ul class="feature-list">
+                            <li><strong>Asset Refinement:</strong> Updated tile and UI icons for better consistency.</li>
+                        </ul>
+                    </div>
+
+                    <!-- v1.0.0 -->
+                    <div class="version-entry">
+                        <div class="version-header">
+                            <span class="version-number">v1.0.0</span>
+                            <span class="version-date">Dec 7, 2025</span>
+                        </div>
+                        <div class="category">Added</div>
+                        <ul class="feature-list">
+                            <li><strong>Core Mechanics:</strong> Basic Minesweeper logic including grid generation, mine placement, and recursive reveal.</li>
+                            <li><strong>Retro UI:</strong> Initial implementation of the classic Windows-style interface.</li>
+                            <li><strong>Difficulty Settings:</strong> Beginner, Intermediate, and Expert presets.</li>
+                        </ul>
+                    </div>
+
                 </div>
             </div>
-            <div class="msg-footer">
-                <button id="msg-restart-btn">Play Again</button>
-                <button onclick="document.getElementById('game-over-modal').style.display='none'">Close</button>
+            <div class="version-modal-footer">
+                <button id="close-log-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Pop-up -->
+    <div id="game-over-modal" class="modal">
+        <div class="window modal-content">
+            <div class="window-header" id="msg-title">Game Over</div>
+            <div class="msg-box">
+                <div class="msg-body">
+                    <div id="msg-icon">
+                        <!-- Icon injected by JS -->
+                    </div>
+                    <div id="msg-text">
+                        <!-- Text injected by JS -->
+                    </div>
+                </div>
+                <div class="msg-footer">
+                    <button id="msg-restart-btn">Play Again</button>
+                </div>
             </div>
         </div>
     </div>

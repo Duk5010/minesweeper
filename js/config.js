@@ -27,7 +27,6 @@ export const CONFIG = {
                 FLAG_WRONG: 'assets/images/icons/flag-wrong.png',
                 MINE: 'assets/images/icons/mine.png',
                 MINE_EXPLODED: 'assets/images/icons/mine-exploded.png',
-                MINE_WRONG: 'assets/images/icons/mine-wrong.png'
             },
             UI: {
                 SMILEY_NORMAL: 'assets/images/ui/smiley-normal.png',
