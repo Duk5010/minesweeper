@@ -6,7 +6,7 @@ export class Controls {
         this.activeChordTargets = null; // Track highlighted cells
         this.touchStartTime = 0;
         this.longPressTimer = null;
-        this.longPressDuration = 400; // ms
+        this.longPressDuration = 400;
         this.lastTouchElement = null;
 
         this.handleMouseDown = this.handleMouseDown.bind(this);
@@ -60,7 +60,6 @@ export class Controls {
     }
 
     handleMouseLeave() {
-        // Optional: clear highlights if needed
     }
 
     handleContextMenu(e) {
@@ -81,15 +80,13 @@ export class Controls {
         this.ui.setFace('scared');
 
         const cell = this.game.board[cellData.r][cellData.c];
-        
-        // VISUAL FEEDBACK
+
         if (cell.revealed) {
             // Always highlight neighbors on press (even if flags don't match yet)
             const targets = this.game.getChordTargets(cellData.r, cellData.c);
             this.activeChordTargets = targets;
             this.ui.highlightNeighbors(this.game, targets, true);
         } else if (!cell.flagged && e.button === 0) {
-             // Highlight single cell press
              this.ui.updateCell(cellData.r, cellData.c, cell, false, true);
         }
     }
@@ -97,8 +94,7 @@ export class Controls {
     handleMouseUp(e) {
         if (!this.isMouseDown) return;
         this.isMouseDown = false;
-        
-        // 1. Clear Highlights immediately on release
+
         if (this.activeChordTargets) {
             this.ui.highlightNeighbors(this.game, this.activeChordTargets, false);
             this.activeChordTargets = null;
@@ -115,10 +111,8 @@ export class Controls {
 
         const { r, c } = cellData;
 
-        // Left Click (0)
         if (e.button === 0) {
             if (this.game.board[r][c].revealed) {
-                // Clicking a revealed number: Attempt Chord
                 if (this.game.chord(r, c)) {
                     this.game.stats.chord.active++;
                     this.playSound('click');
@@ -126,7 +120,6 @@ export class Controls {
                     this.game.stats.chord.wasted++;
                 }
             } else if (!this.game.board[r][c].flagged) {
-                // Clicking a hidden, unflagged cell: Reveal
                 if (this.game.reveal(r, c)) {
                     this.game.stats.left.active++;
                     this.playSound('click');
@@ -134,11 +127,9 @@ export class Controls {
                     this.game.stats.left.wasted++;
                 }
             } else {
-                // Clicking a flag: Wasted Left Click
                 this.game.stats.left.wasted++;
             }
         }
-        // Middle Click (1)
         else if (e.button === 1) {
             if (this.game.chord(r, c)) {
                 this.game.stats.chord.active++;
@@ -147,7 +138,6 @@ export class Controls {
                 this.game.stats.chord.wasted++;
             }
         }
-        // Right Click (2)
         else if (e.button === 2) {
             if (this.game.toggleFlag(r, c)) {
                 this.game.stats.right.active++;
@@ -172,7 +162,6 @@ export class Controls {
 
         const cell = this.game.board[cellData.r][cellData.c];
 
-        // VISUAL FEEDBACK (Mobile)
         if (cell.revealed) {
             const targets = this.game.getChordTargets(cellData.r, cellData.c);
             this.activeChordTargets = targets;
@@ -181,7 +170,6 @@ export class Controls {
             this.ui.updateCell(cellData.r, cellData.c, cell, false, true);
         }
 
-        // Long press detection for flagging
         this.longPressTimer = setTimeout(() => {
             // Cancel visual highlight before flagging
             if (this.activeChordTargets) {

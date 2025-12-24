@@ -6,7 +6,8 @@ import { CONFIG } from './config.js';
 let game, ui, controls;
 let timerInterval;
 let startTime;
-let currentDifficulty = 'INTERMEDIATE'; // Default
+let currentDifficulty = 'BEGINNER';
+let difficultyButtons = [];
 
 // Asset Preloading
 async function loadAssets() {
@@ -25,8 +26,7 @@ async function loadAssets() {
             img.onerror = resolve; // Continue even if fail
         });
     });
-    
-    // Load Font
+
     const font = new FontFace('Digital7', `url("${CONFIG.ASSETS.FONTS.DIGITAL}")`);
     loadPromises.push(font.load().then(f => document.fonts.add(f)).catch(e => console.log('Font load error', e)));
 
@@ -39,24 +39,20 @@ function initGame(difficultySettings) {
     if (controls) {
         controls.cleanup();
     }
-    
-    // --- FIX APPLIED HERE ---
-    // Clears the interval and resets the variable to null so startTimer works on next click
+
     if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
     }
-    
-    // Hide popups if open
+
     document.getElementById('game-over-modal').style.display = 'none';
     document.getElementById('version-modal').style.display = 'none';
 
     const { rows, cols, mines } = difficultySettings || CONFIG.DIFFICULTY[currentDifficulty];
-    
+
     game = new MinesweeperGame(rows, cols, mines);
     ui = new UI();
-    
-    // Re-initialize grid
+
     ui.initGrid(rows, cols);
     ui.updateMineCount(mines);
     ui.updateTimer(0);
@@ -65,7 +61,6 @@ function initGame(difficultySettings) {
     controls = new Controls(game, ui);
     controls.init();
 
-    // Game Events
     game.onGameStateChange = (event) => {
         if (event.type === 'reveal' && !timerInterval && !game.gameOver) {
             startTimer();
@@ -73,9 +68,8 @@ function initGame(difficultySettings) {
         if (event.type === 'gameOver') {
             stopTimer();
             ui.setFace(event.win ? 'win' : 'lose');
-            ui.render(game); // Final render
-            
-            // Show Pop-up after a slight delay
+            ui.render(game);
+
             setTimeout(() => {
                 showGameOverPopup(event.win);
             }, 500);
@@ -99,7 +93,6 @@ function stopTimer() {
     timerInterval = null;
 }
 
-// Logic for the Game Over Popup
 function showGameOverPopup(win) {
     const modal = document.getElementById('game-over-modal');
     const title = document.getElementById('msg-title');
@@ -117,7 +110,6 @@ function showGameOverPopup(win) {
         icon.innerHTML = `<span class="icon-lose">X</span>`;
     }
 
-    // Add Stats Table
     const stats = game.stats;
     const tableHTML = `
         <table class="stats-table">
@@ -152,7 +144,6 @@ function showGameOverPopup(win) {
     modal.style.display = 'flex';
 }
 
-// Global Event Listeners
 document.addEventListener('game-reset', () => initGame());
 document.addEventListener('play-sound', (e) => {
     let src;
@@ -163,12 +154,10 @@ document.addEventListener('play-sound', (e) => {
     if(src) new Audio(src).play().catch(() => {}); 
 });
 
-// Restart from Popup
 document.getElementById('msg-restart-btn').addEventListener('click', () => {
     initGame();
 });
 
-// Version Log Logic
 document.getElementById('version-tag').addEventListener('click', () => {
     document.getElementById('version-modal').style.display = 'flex';
 });
@@ -180,18 +169,30 @@ const closeVersionLog = () => {
 document.getElementById('close-log-btn').addEventListener('click', closeVersionLog);
 document.getElementById('close-log-x').addEventListener('click', closeVersionLog);
 
-// Difficulty Selector
-document.getElementById('diff-select').addEventListener('change', (e) => {
-    const val = e.target.value;
-    if (val === 'CUSTOM') {
-        document.getElementById('custom-modal').style.display = 'flex';
-    } else {
-        currentDifficulty = val;
-        initGame();
-    }
-});
+const setActiveDifficultyButton = (val) => {
+    difficultyButtons.forEach(btn => {
+        if (btn.dataset.diff === val) btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+};
 
-// Custom Modal Logic
+const attachDifficultyButtons = () => {
+    difficultyButtons = Array.from(document.querySelectorAll('.difficulty-pill'));
+    difficultyButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const val = btn.dataset.diff;
+            if (val === 'CUSTOM') {
+                setActiveDifficultyButton(val);
+                document.getElementById('custom-modal').style.display = 'flex';
+                return;
+            }
+            currentDifficulty = val;
+            setActiveDifficultyButton(val);
+            initGame();
+        });
+    });
+};
+
 document.getElementById('custom-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const rows = parseInt(document.getElementById('custom-rows').value);
@@ -202,10 +203,12 @@ document.getElementById('custom-form').addEventListener('submit', (e) => {
     currentDifficulty = 'CUSTOM';
     
     document.getElementById('custom-modal').style.display = 'none';
+    setActiveDifficultyButton('CUSTOM');
     initGame();
 });
 
-// Start
 loadAssets().then(() => {
+    attachDifficultyButtons();
+    setActiveDifficultyButton(currentDifficulty);
     initGame();
 });

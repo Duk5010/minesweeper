@@ -3,7 +3,7 @@ export const CONFIG = {
         BEGINNER: { rows: 9, cols: 9, mines: 10 },
         INTERMEDIATE: { rows: 16, cols: 16, mines: 40 },
         EXPERT: { rows: 16, cols: 30, mines: 99 },
-        CUSTOM: { rows: 20, cols: 20, mines: 50 } // Default custom values
+        CUSTOM: { rows: 20, cols: 20, mines: 50 }
     },
     ASSETS: {
         IMAGES: {

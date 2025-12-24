@@ -54,7 +54,6 @@ export class UI {
         let newSrc = CONFIG.ASSETS.IMAGES.TILES.HIDDEN;
         let altText = "Hidden";
 
-        // Logic for temporary "pressed" state
         if (isPressed && !cellData.revealed && !cellData.flagged) {
             newSrc = CONFIG.ASSETS.IMAGES.TILES.REVEALED;
         } else if (cellData.revealed) {
@@ -89,7 +88,6 @@ export class UI {
         }
     }
 
-    // Helper for bulk updates
     highlightNeighbors(game, neighbors, active) {
         neighbors.forEach(([nr, nc]) => {
             this.updateCell(nr, nc, game.board[nr][nc], game.gameOver, active);
