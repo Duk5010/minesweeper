@@ -31,14 +31,15 @@ export const CONFIG = {
             UI: {
                 SMILEY_NORMAL: 'assets/images/ui/smiley-normal.png',
                 SMILEY_WIN: 'assets/images/ui/smiley-win.png',
-                SMILEY_LOSE: 'assets/images/ui/smiley-lose.png'
+                SMILEY_LOSE: 'assets/images/ui/smiley-lose.png',
+                SMILEY_PRESSED: 'assets/images/ui/smiley-pressed.png' 
             }
         },
         SOUNDS: {
             CLICK: 'assets/sounds/click.wav',
             FLAG: 'assets/sounds/flag.wav',
             LOSE: 'assets/sounds/lose.mp3',
-            WIN: 'assets/sounds/win.mp3' // Assuming you might have one, or reuse click
+            WIN: 'assets/sounds/win.mp3' 
         },
         FONTS: {
             DIGITAL: 'assets/fonts/Seven Segment.ttf'

@@ -6,6 +6,7 @@ import { CONFIG } from './config.js';
 let game, ui, controls;
 let timerInterval;
 let startTime;
+let endTime;
 let currentDifficulty = 'BEGINNER';
 let difficultyButtons = [];
 
@@ -89,6 +90,7 @@ function startTimer() {
 }
 
 function stopTimer() {
+    endTime = Date.now();
     clearInterval(timerInterval);
     timerInterval = null;
 }
@@ -101,7 +103,7 @@ function showGameOverPopup(win) {
     
     if (win) {
         title.innerText = "Game Won";
-        const timeTaken = Math.floor((Date.now() - startTime) / 1000);
+        const timeTaken = ((endTime - startTime) / 1000).toFixed(3);
         text.innerHTML = `Congratulations!<br>You finished in ${timeTaken} seconds.`;
         icon.innerHTML = `<span class="icon-win">i</span>`; 
     } else {

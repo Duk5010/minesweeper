@@ -97,9 +97,10 @@ export class UI {
     setFace(state) {
         const img = this.faceElement.querySelector('img');
         let src = CONFIG.ASSETS.IMAGES.UI.SMILEY_NORMAL;
+        
         if (state === 'win') src = CONFIG.ASSETS.IMAGES.UI.SMILEY_WIN;
         else if (state === 'lose') src = CONFIG.ASSETS.IMAGES.UI.SMILEY_LOSE;
-        else if (state === 'scared') src = CONFIG.ASSETS.IMAGES.UI.SMILEY_NORMAL;
+        else if (state === 'scared') src = CONFIG.ASSETS.IMAGES.UI.SMILEY_PRESSED; // Updated to use the pressed image
 
         if (img.src !== src) img.src = src;
     }

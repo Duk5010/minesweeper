@@ -233,29 +233,32 @@ body {
     border: 1px solid var(--bg-shadow);
 }
 
+/* UPDATED FACE BUTTON SIZE */
 .face-btn {
-    width: 42px;
-    height: 42px;
-    background-color: var(--bg-dark);
-    border: 2px solid var(--win-white);
-    border-right-color: var(--win-black);
-    border-bottom-color: var(--win-black);
-    box-shadow: inset -1px -1px 0 var(--bg-shadow);
+    width: 48px;  /* Increased to 48px */
+    height: 48px; /* Increased to 48px */
+    background: none;
+    border: none;
+    box-shadow: none;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
+    padding: 0;
 }
 
 .face-btn img {
-    width: 32px;
-    height: 32px;
+    width: 100%;
+    height: 100%;
+    display: block;
+    image-rendering: pixelated; /* Ensures crisp scaling for pixel art */
 }
 
 .face-btn:active {
-    border: 2px solid var(--bg-shadow);
+    border: none;
     box-shadow: none;
-    padding: 2px 0 0 2px; 
+    padding: 0;
+    transform: translate(1px, 1px);
 }
 
 .grid-border {

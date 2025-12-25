@@ -3,7 +3,7 @@ export class Controls {
         this.game = game;
         this.ui = ui;
         this.isMouseDown = false;
-        this.activeChordTargets = null; // Track highlighted cells
+        this.activeChordTargets = null; 
         this.touchStartTime = 0;
         this.longPressTimer = null;
         this.longPressDuration = 400;
@@ -16,6 +16,10 @@ export class Controls {
         this.handleTouchStart = this.handleTouchStart.bind(this);
         this.handleTouchEnd = this.handleTouchEnd.bind(this);
         this.handleResetClick = this.handleResetClick.bind(this);
+        
+        // Bindings for Face Button Interaction
+        this.handleFaceDown = this.handleFaceDown.bind(this);
+        this.handleFaceLeave = this.handleFaceLeave.bind(this);
     }
 
     init() {
@@ -27,10 +31,17 @@ export class Controls {
         grid.addEventListener('mouseleave', this.handleMouseLeave);
         grid.addEventListener('contextmenu', this.handleContextMenu);
 
+        // Passive: false allows e.preventDefault() to work for the ghost click fix
         grid.addEventListener('touchstart', this.handleTouchStart, { passive: false });
         grid.addEventListener('touchend', this.handleTouchEnd);
         
         resetBtn.addEventListener('click', this.handleResetClick);
+        
+        // Face Button Interaction Listeners
+        resetBtn.addEventListener('mousedown', this.handleFaceDown);
+        resetBtn.addEventListener('mouseleave', this.handleFaceLeave);
+        resetBtn.addEventListener('touchstart', this.handleFaceDown, { passive: true });
+        resetBtn.addEventListener('touchend', this.handleFaceLeave);
     }
 
     cleanup() {
@@ -48,6 +59,10 @@ export class Controls {
         
         if (resetBtn) {
             resetBtn.removeEventListener('click', this.handleResetClick);
+            resetBtn.removeEventListener('mousedown', this.handleFaceDown);
+            resetBtn.removeEventListener('mouseleave', this.handleFaceLeave);
+            resetBtn.removeEventListener('touchstart', this.handleFaceDown);
+            resetBtn.removeEventListener('touchend', this.handleFaceLeave);
         }
     }
 
@@ -69,6 +84,21 @@ export class Controls {
     handleResetClick() {
         document.dispatchEvent(new CustomEvent('game-reset'));
     }
+    
+    // Updates face to "pressed" state (using smiley-pressed.png via 'scared' state)
+    handleFaceDown(e) {
+        if (e.type === 'mousedown' && e.button !== 0) return;
+        this.ui.setFace('scared');
+    }
+
+    // Reverts face to current game state
+    handleFaceLeave() {
+        if (this.game.gameOver) {
+            this.ui.setFace(this.game.won ? 'win' : 'lose');
+        } else {
+            this.ui.setFace('normal');
+        }
+    }
 
     handleMouseDown(e) {
         if (this.game.gameOver) return;
@@ -77,12 +107,12 @@ export class Controls {
         if (!cellData) return;
 
         this.isMouseDown = true;
-        this.ui.setFace('scared');
+        // Removed setFace('scared') to prevent face change on grid click
 
         const cell = this.game.board[cellData.r][cellData.c];
 
-        if (cell.revealed) {
-            // Always highlight neighbors on press (even if flags don't match yet)
+        // FIX: Added (e.button !== 2) to prevent right-click from triggering visual chording
+        if (cell.revealed && e.button !== 2) {
             const targets = this.game.getChordTargets(cellData.r, cellData.c);
             this.activeChordTargets = targets;
             this.ui.highlightNeighbors(this.game, targets, true);
@@ -111,13 +141,16 @@ export class Controls {
 
         const { r, c } = cellData;
 
-        if (e.button === 0) {
+        if (e.button === 0) { // Left Click
             if (this.game.board[r][c].revealed) {
                 if (this.game.chord(r, c)) {
                     this.game.stats.chord.active++;
                     this.playSound('click');
                 } else {
-                    this.game.stats.chord.wasted++;
+                    // FIX: Only count as wasted if it's NOT an empty (0) tile
+                    if (this.game.board[r][c].neighborMines !== 0) {
+                        this.game.stats.chord.wasted++;
+                    }
                 }
             } else if (!this.game.board[r][c].flagged) {
                 if (this.game.reveal(r, c)) {
@@ -130,7 +163,7 @@ export class Controls {
                 this.game.stats.left.wasted++;
             }
         }
-        else if (e.button === 1) {
+        else if (e.button === 1) { // Middle Click
             if (this.game.chord(r, c)) {
                 this.game.stats.chord.active++;
                 this.playSound('click');
@@ -138,13 +171,21 @@ export class Controls {
                 this.game.stats.chord.wasted++;
             }
         }
-        else if (e.button === 2) {
+        else if (e.button === 2) { // Right Click
             if (this.game.toggleFlag(r, c)) {
-                this.game.stats.right.active++;
+                if (this.game.board[r][c].flagged) {
+                    // Flagging: +1 Active
+                    this.game.stats.right.active++;
+                } else {
+                    // FIX: Unflagging: -1 Active, +2 Wasted
+                    this.game.stats.right.active--;
+                    this.game.stats.right.wasted += 2;
+                }
                 this.playSound('flag');
-            } else {
-                this.game.stats.right.wasted++;
-            }
+            } 
+            // FIX: Removed the else block here. 
+            // Previously, this registered a wasted click if the cell was already revealed.
+            // By removing it, right-clicking a number (revealed cell) does nothing to the stats.
         }
 
         this.ui.render(this.game);
@@ -153,12 +194,15 @@ export class Controls {
     handleTouchStart(e) {
         if (this.game.gameOver) return;
         
+        // FIX: Prevent default to stop browser from firing emulated mouse events
+        e.preventDefault(); 
+        
         const cellData = this.getCellFromEvent(e);
         if (!cellData) return;
 
         this.lastTouchElement = cellData.target;
         this.touchStartTime = Date.now();
-        this.ui.setFace('scared');
+        // Removed setFace('scared') to prevent face change on grid touch
 
         const cell = this.game.board[cellData.r][cellData.c];
 
@@ -180,7 +224,14 @@ export class Controls {
 
             if (!this.game.board[cellData.r][cellData.c].revealed) {
                 if(this.game.toggleFlag(cellData.r, cellData.c)) {
-                    this.game.stats.right.active++;
+                    if (this.game.board[cellData.r][cellData.c].flagged) {
+                        // Flagging: +1 Active
+                        this.game.stats.right.active++;
+                    } else {
+                        // FIX: Unflagging: -1 Active, +2 Wasted
+                        this.game.stats.right.active--;
+                        this.game.stats.right.wasted += 2;
+                    }
                     this.playSound('flag');
                 } else {
                     this.game.stats.right.wasted++;
@@ -188,7 +239,10 @@ export class Controls {
                 this.ui.render(this.game);
                 if (navigator.vibrate) navigator.vibrate(50);
             } else {
-                this.game.stats.right.wasted++; // Wasted long press on revealed
+                // FIX: Long press on revealed empty tile should not be wasted
+                if (this.game.board[cellData.r][cellData.c].neighborMines !== 0) {
+                    this.game.stats.right.wasted++; 
+                }
             }
             
             this.lastTouchElement = null; 
@@ -197,6 +251,9 @@ export class Controls {
     }
 
     handleTouchEnd(e) {
+        // FIX: Prevent default here as well
+        e.preventDefault();
+
         clearTimeout(this.longPressTimer);
         this.ui.setFace('normal');
 
@@ -217,7 +274,10 @@ export class Controls {
                     this.game.stats.chord.active++;
                     this.playSound('click');
                  } else {
-                    this.game.stats.chord.wasted++;
+                    // FIX: Chord attempt on revealed empty tile should not be wasted
+                    if (this.game.board[cellData.r][cellData.c].neighborMines !== 0) {
+                        this.game.stats.chord.wasted++;
+                    }
                  }
              } else if (!this.game.board[cellData.r][cellData.c].flagged) {
                  if(this.game.reveal(cellData.r, cellData.c)) {
