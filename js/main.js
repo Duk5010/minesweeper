@@ -61,6 +61,9 @@ function initGame(difficultySettings) {
   document.getElementById("version-modal").style.display = "none";
   document.getElementById("dev-timer").textContent = "0.000";
   document.getElementById("dev-3bv").textContent = "0";
+  document.getElementById("dev-left-clicks").textContent = "0";
+  document.getElementById("dev-right-clicks").textContent = "0";
+  document.getElementById("dev-chord-clicks").textContent = "0";
 
   const { rows, cols, mines } =
     difficultySettings || CONFIG.DIFFICULTY[currentDifficulty];
@@ -119,8 +122,14 @@ function startTimer() {
         // Update dev timer always, if visible
         const devTools = document.getElementById('dev-tools');
         if (devTools && devTools.classList.contains('visible')) {
-            const devTimer = document.getElementById('dev-timer');
-            devTimer.textContent = (elapsed / 1000).toFixed(3);
+            document.getElementById('dev-timer').textContent = (elapsed / 1000).toFixed(3);
+            
+            if (game && game.stats) {
+                const { left, right, chord } = game.stats;
+                document.getElementById('dev-left-clicks').textContent = left.active + left.wasted;
+                document.getElementById('dev-right-clicks').textContent = right.active + right.wasted;
+                document.getElementById('dev-chord-clicks').textContent = chord.active + chord.wasted;
+            }
         }
     }, 11); // High frequency interval
 }
@@ -141,6 +150,13 @@ function stopTimer() {
     const devTimer = document.getElementById('dev-timer');
     if (devTimer) {
         devTimer.textContent = (elapsed / 1000).toFixed(3);
+    }
+
+    if (game && game.stats) {
+        const { left, right, chord } = game.stats;
+        document.getElementById('dev-left-clicks').textContent = left.active + left.wasted;
+        document.getElementById('dev-right-clicks').textContent = right.active + right.wasted;
+        document.getElementById('dev-chord-clicks').textContent = chord.active + chord.wasted;
     }
 }
 
