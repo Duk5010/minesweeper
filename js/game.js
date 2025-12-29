@@ -217,4 +217,21 @@ export class MinesweeperGame {
         
         if (this.onGameStateChange) this.onGameStateChange({ type: 'gameOver', win });
     }
+
+    forceWin() {
+        if (this.gameOver) return;
+        if (this.firstClick) {
+            this.placeMines(-1, -1);
+            this.firstClick = false;
+        }
+
+        for (let r = 0; r < this.rows; r++) {
+            for (let c = 0; c < this.cols; c++) {
+                if (!this.board[r][c].isMine) {
+                    this.board[r][c].revealed = true;
+                }
+            }
+        }
+        this.endGame(true);
+    }
 }
