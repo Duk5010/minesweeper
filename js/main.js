@@ -125,7 +125,7 @@ function showGameOverPopup(win) {
   const totalClicks = stats.left.active + stats.chord.active;
   const threeBV = game.puzzleStats.threeBV;
   const threeBVPS = (threeBV / timeTaken).toFixed(2);
-  const efficiency = totalClicks > 0 ? ((threeBV / totalClicks) * 100).toFixed(2) : 0;
+  const efficiency = totalClicks > 0 ? Math.min(100, (threeBV / totalClicks) * 100).toFixed(2) : 0;
 
   const tableHTML = `
         <table class="stats-table">

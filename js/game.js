@@ -7,7 +7,6 @@ export class MinesweeperGame {
         this.gameOver = false;
         this.won = false;
         this.minesRemaining = mines;
-        this.firstClick = true;
         this.onGameStateChange = null; 
         
         // Statistics Tracking
@@ -22,6 +21,7 @@ export class MinesweeperGame {
         };
 
         this.initBoard();
+        this.placeMines();
     }
 
     initBoard() {
@@ -41,16 +41,13 @@ export class MinesweeperGame {
         }
     }
 
-    placeMines(excludeR, excludeC) {
+    placeMines() {
         let minesPlaced = 0;
         while (minesPlaced < this.mines) {
             const r = Math.floor(Math.random() * this.rows);
             const c = Math.floor(Math.random() * this.cols);
 
-            if (!this.board[r][c].isMine && Math.abs(r - excludeR) > 1 && Math.abs(c - excludeC) > 1) {
-                this.board[r][c].isMine = true;
-                minesPlaced++;
-            } else if (this.mines >= (this.rows * this.cols) - 9 && !this.board[r][c].isMine && (r !== excludeR || c !== excludeC)) {
+            if (!this.board[r][c].isMine) {
                 this.board[r][c].isMine = true;
                 minesPlaced++;
             }
@@ -127,11 +124,6 @@ export class MinesweeperGame {
 
     reveal(r, c) {
         if (this.gameOver || this.board[r][c].flagged || this.board[r][c].revealed) return false;
-
-        if (this.firstClick) {
-            this.placeMines(r, c);
-            this.firstClick = false;
-        }
 
         const cell = this.board[r][c];
         cell.revealed = true;
@@ -263,10 +255,6 @@ export class MinesweeperGame {
 
     forceWin() {
         if (this.gameOver) return;
-        if (this.firstClick) {
-            this.placeMines(-1, -1);
-            this.firstClick = false;
-        }
 
         for (let r = 0; r < this.rows; r++) {
             for (let c = 0; c < this.cols; c++) {
