@@ -88,13 +88,11 @@ export class Controls {
     document.dispatchEvent(new CustomEvent("game-reset"));
   }
 
-  // Updates face to "pressed" state (using smiley-pressed.png via 'scared' state)
   handleFaceDown(e) {
     if (e.type === "mousedown" && e.button !== 0) return;
     this.ui.setFace("scared");
   }
 
-  // Reverts face to current game state
   handleFaceLeave() {
     if (this.game.gameOver) {
       this.ui.setFace(this.game.won ? "win" : "lose");
@@ -110,11 +108,9 @@ export class Controls {
     if (!cellData) return;
 
     this.isMouseDown = true;
-    // Removed setFace('scared') to prevent face change on grid click
 
     const cell = this.game.board[cellData.r][cellData.c];
 
-    // FIX: Added (e.button !== 2) to prevent right-click from triggering visual chording
     if (cell.revealed && e.button !== 2) {
       const targets = this.game.getChordTargets(cellData.r, cellData.c);
       this.activeChordTargets = targets;
@@ -145,13 +141,11 @@ export class Controls {
     const { r, c } = cellData;
 
     if (e.button === 0) {
-      // Left Click
       if (this.game.board[r][c].revealed) {
         if (this.game.chord(r, c)) {
           this.game.stats.chord.active++;
           this.playSound("click");
         } else {
-          // FIX: Only count as wasted if it's NOT an empty (0) tile
           if (this.game.board[r][c].neighborMines !== 0) {
             this.game.stats.chord.wasted++;
           }
@@ -167,7 +161,6 @@ export class Controls {
         this.game.stats.left.wasted++;
       }
     } else if (e.button === 1) {
-      // Middle Click
       if (this.game.chord(r, c)) {
         this.game.stats.chord.active++;
         this.playSound("click");
@@ -175,21 +168,15 @@ export class Controls {
         this.game.stats.chord.wasted++;
       }
     } else if (e.button === 2) {
-      // Right Click
       if (this.game.toggleFlag(r, c)) {
         if (this.game.board[r][c].flagged) {
-          // Flagging: +1 Active
           this.game.stats.right.active++;
         } else {
-          // FIX: Unflagging: -1 Active, +2 Wasted
           this.game.stats.right.active--;
           this.game.stats.right.wasted += 2;
         }
         this.playSound("flag");
       }
-      // FIX: Removed the else block here.
-      // Previously, this registered a wasted click if the cell was already revealed.
-      // By removing it, right-clicking a number (revealed cell) does nothing to the stats.
     }
 
     this.ui.render(this.game);
@@ -198,7 +185,6 @@ export class Controls {
   handleTouchStart(e) {
     if (this.game.gameOver) return;
 
-    // FIX: Prevent default to stop browser from firing emulated mouse events
     e.preventDefault();
 
     const cellData = this.getCellFromEvent(e);
@@ -206,7 +192,6 @@ export class Controls {
 
     this.lastTouchElement = cellData.target;
     this.touchStartTime = Date.now();
-    // Removed setFace('scared') to prevent face change on grid touch
 
     const cell = this.game.board[cellData.r][cellData.c];
 
@@ -219,7 +204,6 @@ export class Controls {
     }
 
     this.longPressTimer = setTimeout(() => {
-      // Cancel visual highlight before flagging
       if (this.activeChordTargets) {
         this.ui.highlightNeighbors(this.game, this.activeChordTargets, false);
         this.activeChordTargets = null;
@@ -229,10 +213,8 @@ export class Controls {
       if (!this.game.board[cellData.r][cellData.c].revealed) {
         if (this.game.toggleFlag(cellData.r, cellData.c)) {
           if (this.game.board[cellData.r][cellData.c].flagged) {
-            // Flagging: +1 Active
             this.game.stats.right.active++;
           } else {
-            // FIX: Unflagging: -1 Active, +2 Wasted
             this.game.stats.right.active--;
             this.game.stats.right.wasted += 2;
           }
@@ -243,7 +225,6 @@ export class Controls {
         this.ui.render(this.game);
         if (navigator.vibrate) navigator.vibrate(50);
       } else {
-        // FIX: Long press on revealed empty tile should not be wasted
         if (this.game.board[cellData.r][cellData.c].neighborMines !== 0) {
           this.game.stats.right.wasted++;
         }
@@ -255,13 +236,11 @@ export class Controls {
   }
 
   handleTouchEnd(e) {
-    // FIX: Prevent default here as well
     e.preventDefault();
 
     clearTimeout(this.longPressTimer);
     this.ui.setFace("normal");
 
-    // Clear Highlights
     if (this.activeChordTargets) {
       this.ui.highlightNeighbors(this.game, this.activeChordTargets, false);
       this.activeChordTargets = null;
@@ -278,7 +257,6 @@ export class Controls {
           this.game.stats.chord.active++;
           this.playSound("click");
         } else {
-          // FIX: Chord attempt on revealed empty tile should not be wasted
           if (this.game.board[cellData.r][cellData.c].neighborMines !== 0) {
             this.game.stats.chord.wasted++;
           }

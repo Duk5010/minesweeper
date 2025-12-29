@@ -9,6 +9,7 @@ export class MinesweeperGame {
         this.minesRemaining = mines;
         this.firstClick = true;
         this.onGameStateChange = null; 
+        this.show3BVHighlights = false;
         
         // Statistics Tracking
         this.stats = {
@@ -18,7 +19,8 @@ export class MinesweeperGame {
         };
 
         this.puzzleStats = {
-            threeBV: 0
+            threeBV: 0,
+            threeBVectors: []
         };
 
         this.initBoard();
@@ -45,7 +47,7 @@ export class MinesweeperGame {
         let minesPlaced = 0;
 
         // With a certain probability, force one mine to be adjacent to the first click to "nerf" the opening
-        if (this.mines > 0 && Math.random() < 0.1) {
+        if (this.mines > 0 && Math.random() < 0.4) {
             const neighbors = this.getNeighbors(excludeR, excludeC);
             if (neighbors.length > 0) {
                 const randomNeighborIndex = Math.floor(Math.random() * neighbors.length);
@@ -86,6 +88,7 @@ export class MinesweeperGame {
 
     calculate3BV() {
         let threeBV = 0;
+        const vectors = [];
         const visited = new Array(this.rows).fill(false).map(() => new Array(this.cols).fill(false));
 
         for (let r = 0; r < this.rows; r++) {
@@ -93,6 +96,7 @@ export class MinesweeperGame {
                 if (!this.board[r][c].isMine && !visited[r][c]) {
                     if (this.board[r][c].neighborMines === 0) {
                         threeBV++;
+                        vectors.push([r,c]);
                         const queue = [[r, c]];
                         visited[r][c] = true;
                         while(queue.length > 0) {
@@ -115,12 +119,21 @@ export class MinesweeperGame {
             for (let c = 0; c < this.cols; c++) {
                 if (!this.board[r][c].isMine && !visited[r][c]) {
                     threeBV++;
+                    vectors.push([r,c]);
                 }
             }
         }
         
         this.puzzleStats.threeBV = threeBV;
+        this.puzzleStats.threeBVectors = vectors;
     }
+
+    toggle3BVHighlights() {
+        if (this.firstClick) return; // Can't show before board is generated
+        this.show3BVHighlights = !this.show3BVHighlights;
+        if (this.onGameStateChange) this.onGameStateChange({ type: 'ui-change' });
+    }
+
 
     getNeighbors(r, c) {
         const neighbors = [];

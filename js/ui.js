@@ -44,16 +44,27 @@ export class UI {
     this.updateMineCount(game.minesRemaining);
     for (let r = 0; r < game.rows; r++) {
       for (let c = 0; c < game.cols; c++) {
-        this.updateCell(r, c, game.board[r][c], game.gameOver);
+        this.updateCell(r, c, game);
       }
     }
   }
 
-  updateCell(r, c, cellData, isGameOver, isPressed = false) {
+  updateCell(r, c, game, isPressed = false) {
+    const cellData = game.board[r][c];
+    const isGameOver = game.gameOver;
+
     const targetCell = this.gridContainer.querySelector(
       `.cell[data-r="${r}"][data-c="${c}"]`
     );
     if (!targetCell) return;
+
+    targetCell.classList.remove('highlight-3bv');
+    if (game.show3BVHighlights && !cellData.revealed && !cellData.flagged) {
+        const isVector = game.puzzleStats.threeBVectors.some(v => v[0] === r && v[1] === c);
+        if (isVector) {
+            targetCell.classList.add('highlight-3bv');
+        }
+    }
 
     const img = targetCell.querySelector("img");
     let newSrc = CONFIG.ASSETS.IMAGES.TILES.HIDDEN;
@@ -97,7 +108,7 @@ export class UI {
 
   highlightNeighbors(game, neighbors, active) {
     neighbors.forEach(([nr, nc]) => {
-      this.updateCell(nr, nc, game.board[nr][nc], game.gameOver, active);
+      this.updateCell(nr, nc, game, active);
     });
   }
 
@@ -130,5 +141,81 @@ export class UI {
       img.src = CONFIG.ASSETS.IMAGES.NUMBERS[digit + 9];
       element.appendChild(img);
     }
+  }
+  displayOptimalClicks(cells) {
+    // Backwards-compatible helper: map cells to highlight class
+    const allCells = this.gridContainer.querySelectorAll('.cell');
+    allCells.forEach(cell => cell.classList.remove('highlight-3bv'));
+
+    if (cells && cells.length > 0) {
+      cells.forEach(({ r, c }) => {
+        const cellEl = this.gridContainer.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+        if (cellEl) cellEl.classList.add('highlight-3bv');
+      });
+    }
+  }
+
+  render(game) {
+    this.updateMineCount(game.minesRemaining);
+    for (let r = 0; r < game.rows; r++) {
+      for (let c = 0; c < game.cols; c++) {
+        this.updateCell(r, c, game);
+      }
+    }
+  }
+
+  updateCell(r, c, game, isPressed = false) {
+    const cellData = game.board[r][c];
+    const isGameOver = game.gameOver;
+
+    const targetCell = this.gridContainer.querySelector(
+      `.cell[data-r="${r}"][data-c="${c}"]`
+    );
+    if (!targetCell) return;
+
+    // Ensure 3BV highlight state is kept in sync
+    targetCell.classList.remove('highlight-3bv');
+    if (game.show3BVHighlights && !cellData.revealed && !cellData.flagged) {
+      const isVector = (game.puzzleStats.threeBVectors || []).some(v => v[0] === r && v[1] === c);
+      if (isVector) targetCell.classList.add('highlight-3bv');
+    }
+
+    const img = targetCell.querySelector("img");
+    let newSrc = CONFIG.ASSETS.IMAGES.TILES.HIDDEN;
+    let altText = "Hidden";
+
+    if (isPressed && !cellData.revealed && !cellData.flagged) {
+      newSrc = CONFIG.ASSETS.IMAGES.TILES.REVEALED;
+    } else if (cellData.revealed) {
+      targetCell.classList.add("revealed");
+      if (cellData.isMine) {
+        if (cellData.flagged) {
+          newSrc = CONFIG.ASSETS.IMAGES.ICONS.FLAG;
+        } else if (cellData.exploded) {
+          newSrc = CONFIG.ASSETS.IMAGES.ICONS.MINE_EXPLODED;
+        } else {
+          newSrc = CONFIG.ASSETS.IMAGES.ICONS.MINE;
+        }
+      } else {
+        const num = cellData.neighborMines;
+        newSrc = num === 0 ? CONFIG.ASSETS.IMAGES.TILES.REVEALED : CONFIG.ASSETS.IMAGES.NUMBERS[num];
+      }
+      altText = cellData.isMine ? "Mine" : `${cellData.neighborMines} mines nearby`;
+    } else if (cellData.flagged) {
+      newSrc = CONFIG.ASSETS.IMAGES.ICONS.FLAG;
+      if (isGameOver && !cellData.isMine) newSrc = CONFIG.ASSETS.IMAGES.ICONS.FLAG_WRONG;
+      altText = "Flagged";
+    }
+
+    if (img.getAttribute("src") !== newSrc) {
+      img.src = newSrc;
+      targetCell.setAttribute("aria-label", altText);
+    }
+  }
+
+  highlightNeighbors(game, neighbors, active) {
+    neighbors.forEach(([nr, nc]) => {
+      this.updateCell(nr, nc, game, active);
+    });
   }
 }

@@ -98,6 +98,9 @@ function initGame(difficultySettings) {
         showGameOverPopup(event.win);
       }, 500);
     }
+    if (event.type === 'ui-change') {
+        ui.render(game);
+    }
   };
 
   ui.render(game);
@@ -314,16 +317,20 @@ loadAssets().then(() => {
 let keySequence = [];
 document.addEventListener('keydown', (e) => {
     keySequence.push(e.key);
-    if (keySequence.length > 11) {
+    if (keySequence.length > 15) {
         keySequence.shift();
     }
-    if (keySequence.join('').toLowerCase() === 'minesweeper') {
+    const sequence = keySequence.join('').toLowerCase();
+    if (sequence.endsWith('minesweeper')) {
         game.forceWin();
+        keySequence = [];
     }
-    if (keySequence.join('').toLowerCase().endsWith('nerd')) {
-        const devTools = document.getElementById('dev-tools');
-        devTools.classList.toggle('visible');
-        keySequence = []; // Reset sequence
+    if (sequence.endsWith('statsfornerds')) {
+        document.getElementById('dev-tools').classList.toggle('visible');
+        keySequence = [];
+    }
+    if (sequence.endsWith('icanseeclicks')) {
+        game.toggle3BVHighlights();
+        keySequence = [];
     }
 });
-
