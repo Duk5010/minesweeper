@@ -74,7 +74,33 @@ body {
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
+  position: relative;
 }
+
+.dev-tools {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #0f0;
+  padding: 10px;
+  border: 1px solid #0f0;
+  border-radius: 5px;
+  font-family: "Courier New", monospace;
+  font-size: 16px;
+  display: none; /* Hidden by default */
+  z-index: 100;
+  text-shadow: 0 0 5px #0f0;
+}
+
+.dev-tools.visible {
+  display: block;
+}
+
+.dev-tools p {
+  margin: 0 0 5px 0;
+}
+
 
 .game-sidebar {
   width: 150px;

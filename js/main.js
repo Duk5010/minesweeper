@@ -53,9 +53,14 @@ function initGame(difficultySettings) {
     clearInterval(timerInterval);
     timerInterval = null;
   }
+  
+  startTime = null;
+  endTime = null;
 
   document.getElementById("game-over-modal").classList.remove("visible");
   document.getElementById("version-modal").style.display = "none";
+  document.getElementById("dev-timer").textContent = "0.000";
+  document.getElementById("dev-3bv").textContent = "0";
 
   const { rows, cols, mines } =
     difficultySettings || CONFIG.DIFFICULTY[currentDifficulty];
@@ -72,8 +77,14 @@ function initGame(difficultySettings) {
   controls.init();
 
   game.onGameStateChange = (event) => {
-    if (event.type === "reveal" && !timerInterval && !game.gameOver) {
-      startTimer();
+    if (event.type === "reveal" && !game.gameOver) {
+        if (!timerInterval) { // This block runs only on the first reveal
+            startTimer();
+            const dev3BV = document.getElementById('dev-3bv');
+            if (dev3BV) {
+                dev3BV.textContent = game.puzzleStats.threeBV;
+            }
+        }
     }
     if (event.type === "gameOver") {
       stopTimer();
@@ -90,18 +101,47 @@ function initGame(difficultySettings) {
 }
 
 function startTimer() {
-  startTime = Date.now();
-  timerInterval = setInterval(() => {
-    const delta = Math.floor((Date.now() - startTime) / 1000);
-    const cappedTime = Math.min(delta, 999);
-    ui.updateTimer(cappedTime);
-  }, 1000);
+    startTime = Date.now();
+    let lastSecond = -1;
+
+    timerInterval = setInterval(() => {
+        if (!startTime) return;
+        const elapsed = Date.now() - startTime;
+        const seconds = Math.floor(elapsed / 1000);
+
+        // Update main timer only when the second changes
+        if (seconds !== lastSecond) {
+            const cappedTime = Math.min(seconds, 999);
+            ui.updateTimer(cappedTime);
+            lastSecond = seconds;
+        }
+
+        // Update dev timer always, if visible
+        const devTools = document.getElementById('dev-tools');
+        if (devTools && devTools.classList.contains('visible')) {
+            const devTimer = document.getElementById('dev-timer');
+            devTimer.textContent = (elapsed / 1000).toFixed(3);
+        }
+    }, 11); // High frequency interval
 }
 
 function stopTimer() {
-  endTime = Date.now();
-  clearInterval(timerInterval);
-  timerInterval = null;
+    endTime = Date.now();
+    clearInterval(timerInterval);
+    timerInterval = null;
+
+    if (!startTime) return;
+
+    // Final update for both timers
+    const elapsed = endTime - startTime;
+    const seconds = Math.floor(elapsed / 1000);
+    const cappedTime = Math.min(seconds, 999);
+    ui.updateTimer(cappedTime);
+
+    const devTimer = document.getElementById('dev-timer');
+    if (devTimer) {
+        devTimer.textContent = (elapsed / 1000).toFixed(3);
+    }
 }
 
 function showGameOverPopup(win) {
@@ -264,4 +304,10 @@ document.addEventListener('keydown', (e) => {
     if (keySequence.join('').toLowerCase() === 'minesweeper') {
         game.forceWin();
     }
+    if (keySequence.join('').toLowerCase().endsWith('nerd')) {
+        const devTools = document.getElementById('dev-tools');
+        devTools.classList.toggle('visible');
+        keySequence = []; // Reset sequence
+    }
 });
+

@@ -43,18 +43,30 @@ export class MinesweeperGame {
 
     placeMines(excludeR, excludeC) {
         let minesPlaced = 0;
+
+        // With a certain probability, force one mine to be adjacent to the first click to "nerf" the opening
+        if (this.mines > 0 && Math.random() < 0.4) { // 50% chance to nerf
+            const neighbors = this.getNeighbors(excludeR, excludeC);
+            if (neighbors.length > 0) {
+                const randomNeighborIndex = Math.floor(Math.random() * neighbors.length);
+                const [nr, nc] = neighbors[randomNeighborIndex];
+                this.board[nr][nc].isMine = true;
+                minesPlaced = 1;
+            }
+        }
+
+        // Place the rest of the mines randomly
         while (minesPlaced < this.mines) {
             const r = Math.floor(Math.random() * this.rows);
             const c = Math.floor(Math.random() * this.cols);
 
-            if (!this.board[r][c].isMine && Math.abs(r - excludeR) > 1 && Math.abs(c - excludeC) > 1) {
-                this.board[r][c].isMine = true;
-                minesPlaced++;
-            } else if (this.mines >= (this.rows * this.cols) - 9 && !this.board[r][c].isMine && (r !== excludeR || c !== excludeC)) {
+            // Ensure we don't place on the first-clicked cell or overwrite an existing mine
+            if (!this.board[r][c].isMine && (r !== excludeR || c !== excludeC)) {
                 this.board[r][c].isMine = true;
                 minesPlaced++;
             }
         }
+
         this.calculateNeighbors();
         this.calculate3BV();
     }
